@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import API_BASE_URL from "./api";
 
 function AdminDashboard({ user, token, onLogout }) {
   const [students, setStudents] = useState([]);
@@ -75,7 +76,7 @@ function AdminDashboard({ user, token, onLogout }) {
   const fetchStudents = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/students",
+        `${API_BASE_URL}/api/students`,
         { headers }
       );
 
@@ -85,38 +86,37 @@ function AdminDashboard({ user, token, onLogout }) {
 
       const data = await response.json();
       setStudents(data);
-
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
   // Fetch archived students
-const fetchArchivedStudents = async () => {
-  try {
-    const response = await fetch(
-      "http://localhost:5000/api/students/archived",
-      { headers }
-    );
+  const fetchArchivedStudents = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/students/archived`,
+        { headers }
+      );
 
-    if (!response.ok) {
-      throw new Error("Could not load archived students.");
+      if (!response.ok) {
+        throw new Error("Could not load archived students.");
+      }
+
+      const data = await response.json();
+      setArchivedStudents(data);
+    } catch (err) {
+      setError(err.message);
     }
-
-    const data = await response.json();
-    setArchivedStudents(data);
-
-  } catch (err) {
-    setError(err.message);
-  }
-};
+  };
 
   // Fetch registered teachers
   const fetchTeachers = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/teachers",
+        `${API_BASE_URL}/api/teachers`,
         { headers }
       );
 
@@ -126,7 +126,6 @@ const fetchArchivedStudents = async () => {
 
       const data = await response.json();
       setTeachers(data);
-
     } catch (err) {
       setError(err.message);
     }
@@ -144,7 +143,7 @@ const fetchArchivedStudents = async () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/attendance?${params}`,
+        `${API_BASE_URL}/api/attendance?${params}`,
         { headers }
       );
 
@@ -162,20 +161,19 @@ const fetchArchivedStudents = async () => {
       });
 
       setAttendance(savedStatuses);
-
     } catch (err) {
       setError(err.message);
     }
   };
 
   // Load dashboard data
- useEffect(() => {
-  if (token) {
-    fetchStudents();
-    fetchTeachers();
-    fetchArchivedStudents();
-  }
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      fetchStudents();
+      fetchTeachers();
+      fetchArchivedStudents();
+    }
+  }, [token]);
 
   useEffect(() => {
     if (token) {
@@ -199,7 +197,7 @@ const fetchArchivedStudents = async () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/students",
+        `${API_BASE_URL}/api/students`,
         {
           method: "POST",
           headers: {
@@ -229,7 +227,6 @@ const fetchArchivedStudents = async () => {
 
       setShowForm(false);
       await fetchStudents();
-
     } catch (err) {
       setError(err.message);
     }
@@ -270,7 +267,7 @@ const fetchArchivedStudents = async () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/students/${editingStudent}`,
+        `${API_BASE_URL}/api/students/${editingStudent}`,
         {
           method: "PUT",
           headers: {
@@ -291,7 +288,6 @@ const fetchArchivedStudents = async () => {
       setEditingStudent(null);
 
       await fetchStudents();
-
     } catch (err) {
       setError(err.message);
     }
@@ -312,80 +308,79 @@ const fetchArchivedStudents = async () => {
   };
 
   // Archive student instead of permanently deleting
-const handleDeleteStudent = async (studentId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to archive this student? Their attendance history will be preserved."
-  );
-
-  if (!confirmed) return;
-
-  setError("");
-  setSuccess("");
-
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/students/${studentId}`,
-      {
-        method: "DELETE",
-        headers
-      }
+  const handleDeleteStudent = async (studentId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to archive this student? Their attendance history will be preserved."
     );
 
-    const data = await response.json();
+    if (!confirmed) return;
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to archive student.");
-    }
+    setError("");
+    setSuccess("");
 
-    setSuccess("Student archived successfully. Attendance history preserved!");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/students/${studentId}`,
+        {
+          method: "DELETE",
+          headers
+        }
+      );
 
-    if (editingStudent === studentId) {
-      cancelEditStudent();
-    }
+      const data = await response.json();
 
-    await fetchStudents();
-    await fetchArchivedStudents();
-    await fetchAttendance();
-
-  } catch (err) {
-    setError(err.message);
-  }
-};
-// Restore an archived student
-const handleRestoreStudent = async (studentId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to restore this student?"
-  );
-
-  if (!confirmed) return;
-
-  setError("");
-  setSuccess("");
-
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/students/${studentId}/restore`,
-      {
-        method: "PUT",
-        headers
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to archive student.");
       }
+
+      setSuccess("Student archived successfully. Attendance history preserved!");
+
+      if (editingStudent === studentId) {
+        cancelEditStudent();
+      }
+
+      await fetchStudents();
+      await fetchArchivedStudents();
+      await fetchAttendance();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Restore an archived student
+  const handleRestoreStudent = async (studentId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to restore this student?"
     );
 
-    const data = await response.json();
+    if (!confirmed) return;
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to restore student.");
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/students/${studentId}/restore`,
+        {
+          method: "PUT",
+          headers
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to restore student.");
+      }
+
+      setSuccess("Student restored successfully!");
+
+      await fetchStudents();
+      await fetchArchivedStudents();
+    } catch (err) {
+      setError(err.message);
     }
-
-    setSuccess("Student restored successfully!");
-
-    await fetchStudents();
-    await fetchArchivedStudents();
-
-  } catch (err) {
-    setError(err.message);
-  }
-};
+  };
 
   // Teacher form
   const handleTeacherChange = (e) => {
@@ -404,7 +399,7 @@ const handleRestoreStudent = async (studentId) => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/teachers",
+        `${API_BASE_URL}/api/teachers`,
         {
           method: "POST",
           headers: {
@@ -426,7 +421,7 @@ const handleRestoreStudent = async (studentId) => {
 
       try {
         const assignResponse = await fetch(
-          `http://localhost:5000/api/teachers/${data.teacherId}/classes`,
+          `${API_BASE_URL}/api/teachers/${data.teacherId}/classes`,
           {
             method: "POST",
             headers: {
@@ -450,7 +445,6 @@ const handleRestoreStudent = async (studentId) => {
         setSuccess(
           "Teacher account created and class assigned successfully!"
         );
-
       } catch (assignError) {
         setSuccess(
           `Teacher account created, but class assignment failed: ${assignError.message}`
@@ -465,7 +459,6 @@ const handleRestoreStudent = async (studentId) => {
 
       setShowTeacherForm(false);
       await fetchTeachers();
-
     } catch (err) {
       setError(err.message);
     }
@@ -484,7 +477,7 @@ const handleRestoreStudent = async (studentId) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/teachers/${teacherId}`,
+        `${API_BASE_URL}/api/teachers/${teacherId}`,
         {
           method: "DELETE",
           headers
@@ -499,7 +492,6 @@ const handleRestoreStudent = async (studentId) => {
 
       setSuccess("Teacher account deleted successfully!");
       await fetchTeachers();
-
     } catch (err) {
       setError(err.message);
     }
@@ -533,7 +525,7 @@ const handleRestoreStudent = async (studentId) => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/attendance/reports?${params}`,
+        `${API_BASE_URL}/api/attendance/reports?${params}`,
         { headers }
       );
 
@@ -544,7 +536,6 @@ const handleRestoreStudent = async (studentId) => {
       }
 
       setReportData(data);
-
     } catch (err) {
       setReportError(err.message);
     } finally {
@@ -634,7 +625,7 @@ const handleRestoreStudent = async (studentId) => {
     try {
       for (const student of classStudents) {
         const response = await fetch(
-          "http://localhost:5000/api/attendance",
+          `${API_BASE_URL}/api/attendance`,
           {
             method: "POST",
             headers: {
@@ -660,7 +651,6 @@ const handleRestoreStudent = async (studentId) => {
 
       setSuccess("Attendance saved successfully!");
       await fetchAttendance();
-
     } catch (err) {
       setError(err.message);
     } finally {
@@ -956,13 +946,13 @@ const handleRestoreStudent = async (studentId) => {
                           Edit
                         </button>
 
-                      <button
-                       type="button"
-                       className="archive-button"
-                       onClick={() => handleDeleteStudent(student.id)}
-                     >
-                       Archive
-            </button>
+                        <button
+                          type="button"
+                          className="archive-button"
+                          onClick={() => handleDeleteStudent(student.id)}
+                        >
+                          Archive
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -971,67 +961,68 @@ const handleRestoreStudent = async (studentId) => {
             )}
           </div>
         </section>
+
         {/* Archived Students */}
-<section className="dashboard-section" id="archived">
-  <div className="section-heading-row">
-    <div>
-      <h2>Archived Students</h2>
-      <p className="section-description">
-        View previously archived students and restore their accounts.
-        Their attendance history is preserved.
-      </p>
-    </div>
+        <section className="dashboard-section" id="archived">
+          <div className="section-heading-row">
+            <div>
+              <h2>Archived Students</h2>
+              <p className="section-description">
+                View previously archived students and restore their accounts.
+                Their attendance history is preserved.
+              </p>
+            </div>
 
-    <span className="stat-number">
-      {archivedStudents.length} Archived
-    </span>
-  </div>
+            <span className="stat-number">
+              {archivedStudents.length} Archived
+            </span>
+          </div>
 
-  <div className="student-table-container">
-    {archivedStudents.length === 0 ? (
-      <p className="empty-message">
-        No archived students found.
-      </p>
-    ) : (
-      <table className="student-table">
-        <thead>
-          <tr>
-            <th>Admission No.</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Class</th>
-            <th>Parent</th>
-            <th>Phone</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+          <div className="student-table-container">
+            {archivedStudents.length === 0 ? (
+              <p className="empty-message">
+                No archived students found.
+              </p>
+            ) : (
+              <table className="student-table">
+                <thead>
+                  <tr>
+                    <th>Admission No.</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Class</th>
+                    <th>Parent</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-        <tbody>
-          {archivedStudents.map(student => (
-            <tr key={student.id}>
-              <td>{student.admission_number}</td>
-              <td>{student.first_name}</td>
-              <td>{student.last_name}</td>
-              <td>{student.class_name}</td>
-              <td>{student.parent_name || "-"}</td>
-              <td>{student.parent_phone || "-"}</td>
+                <tbody>
+                  {archivedStudents.map(student => (
+                    <tr key={student.id}>
+                      <td>{student.admission_number}</td>
+                      <td>{student.first_name}</td>
+                      <td>{student.last_name}</td>
+                      <td>{student.class_name}</td>
+                      <td>{student.parent_name || "-"}</td>
+                      <td>{student.parent_phone || "-"}</td>
 
-              <td>
-                <button
-                  type="button"
-                  className="add-student-button"
-                  onClick={() => handleRestoreStudent(student.id)}
-                >
-                  Restore
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-  </div>
-</section>
+                      <td>
+                        <button
+                          type="button"
+                          className="add-student-button"
+                          onClick={() => handleRestoreStudent(student.id)}
+                        >
+                          Restore
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
 
         {/* Teacher Management */}
         <section className="dashboard-section" id="teachers">
@@ -1155,84 +1146,82 @@ const handleRestoreStudent = async (studentId) => {
         </section>
 
         {/* Attendance Management */}
-       
-<section className="dashboard-section" id="attendance">
-  <h2>Attendance Records</h2>
+        <section className="dashboard-section" id="attendance">
+          <h2>Attendance Records</h2>
 
-  <p className="section-description">
-    View student attendance records submitted by teachers.
-  </p>
+          <p className="section-description">
+            View student attendance records submitted by teachers.
+          </p>
 
-  <div className="student-form-grid">
-    <label>
-      Select Class
+          <div className="student-form-grid">
+            <label>
+              Select Class
 
-      <select
-        value={selectedClass}
-        onChange={e => setSelectedClass(e.target.value)}
-      >
-        <option value="">All Classes</option>
+              <select
+                value={selectedClass}
+                onChange={e => setSelectedClass(e.target.value)}
+              >
+                <option value="">All Classes</option>
 
-        {classes.map(className => (
-          <option key={className} value={className}>
-            {className}
-          </option>
-        ))}
-      </select>
-    </label>
+                {classes.map(className => (
+                  <option key={className} value={className}>
+                    {className}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-    <label>
-      Attendance Date
+            <label>
+              Attendance Date
 
-      <input
-        type="date"
-        value={attendanceDate}
-        onChange={e => setAttendanceDate(e.target.value)}
-      />
-    </label>
-  </div>
+              <input
+                type="date"
+                value={attendanceDate}
+                onChange={e => setAttendanceDate(e.target.value)}
+              />
+            </label>
+          </div>
 
-  <h3>Saved Attendance Records</h3>
+          <h3>Saved Attendance Records</h3>
 
-  {attendanceRecords.length === 0 ? (
-    <p>No attendance records for this date yet.</p>
-  ) : (
-    <div className="student-table-container">
-      <table className="student-table">
-        <thead>
-          <tr>
-            <th>Admission No.</th>
-            <th>Student Name</th>
-            <th>Class</th>
-            <th>Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+          {attendanceRecords.length === 0 ? (
+            <p>No attendance records for this date yet.</p>
+          ) : (
+            <div className="student-table-container">
+              <table className="student-table">
+                <thead>
+                  <tr>
+                    <th>Admission No.</th>
+                    <th>Student Name</th>
+                    <th>Class</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
 
-        <tbody>
-          {attendanceRecords.map(record => (
-            <tr key={record.id}>
-              <td>{record.admission_number}</td>
+                <tbody>
+                  {attendanceRecords.map(record => (
+                    <tr key={record.id}>
+                      <td>{record.admission_number}</td>
 
-              <td>
-                {record.first_name} {record.last_name}
-              </td>
+                      <td>
+                        {record.first_name} {record.last_name}
+                      </td>
 
-              <td>{record.class_name}</td>
+                      <td>{record.class_name}</td>
 
-              <td>
-                {String(record.attendance_date).slice(0, 10)}
-              </td>
+                      <td>
+                        {String(record.attendance_date).slice(0, 10)}
+                      </td>
 
-              <td>{record.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</section>
-
+                      <td>{record.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
         {/* Reports */}
         <section className="dashboard-section" id="reports">
@@ -1380,7 +1369,6 @@ const handleRestoreStudent = async (studentId) => {
           Bright Minds Academy © 2026
           <p>Student Attendance Management System</p>
         </footer>
-
       </main>
     </div>
   );

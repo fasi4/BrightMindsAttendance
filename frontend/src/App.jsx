@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import "./App.css";
+import API_BASE_URL from "./api";
 import AdminDashboard from "./AdminDashboard";
 import TeacherDashboard from "./TeacherDashboard";
 
@@ -21,7 +22,7 @@ function App() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

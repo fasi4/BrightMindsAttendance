@@ -1,8 +1,9 @@
 
 import { useEffect, useState } from "react";
+import API_BASE_URL from "./api";
 import "./TeacherDashboard.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = `${API_BASE_URL}/api`;
 
 function getToday() {
   const date = new Date();
@@ -58,7 +59,6 @@ function TeacherDashboard({ user, token, onLogout }) {
     fetchClasses();
   }, [token]);
 
- 
   // Load students and their saved attendance whenever class or date changes
   useEffect(() => {
     if (!selectedClass || !attendanceDate) {
@@ -111,7 +111,6 @@ function TeacherDashboard({ user, token, onLogout }) {
         });
 
         setAttendance(savedAttendance);
-
       } catch (err) {
         setError(err.message);
         setAttendance({});
@@ -122,7 +121,6 @@ function TeacherDashboard({ user, token, onLogout }) {
 
     fetchStudentsAndAttendance();
   }, [selectedClass, attendanceDate, token]);
-
 
   const markStudent = (studentId, status) => {
     setAttendance((previous) => ({
@@ -166,7 +164,9 @@ function TeacherDashboard({ user, token, onLogout }) {
 
       if (failedResponse) {
         const data = await failedResponse.json();
-        throw new Error(data.message || "Some attendance records could not be saved.");
+        throw new Error(
+          data.message || "Some attendance records could not be saved."
+        );
       }
 
       setMessage("Attendance saved successfully!");
@@ -273,11 +273,11 @@ function TeacherDashboard({ user, token, onLogout }) {
                         id="attendance-date"
                         type="date"
                         value={attendanceDate}
-                       onChange={(e) => {
-                        setAttendanceDate(e.target.value);
-                        setMessage("");
-                        setError("");
-                      }}
+                        onChange={(e) => {
+                          setAttendanceDate(e.target.value);
+                          setMessage("");
+                          setError("");
+                        }}
                       />
                     </div>
                   </div>
