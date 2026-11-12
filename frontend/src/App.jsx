@@ -2,6 +2,7 @@
 import { useState } from "react";
 import "./App.css";
 import AdminDashboard from "./AdminDashboard";
+import TeacherDashboard from "./TeacherDashboard";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -58,27 +59,29 @@ function App() {
     setError("");
   };
 
+  // Admin Dashboard
   if (user?.role === "admin") {
     return (
-     <AdminDashboard
-  user={user}
-  token={token}
-  onLogout={handleLogout}
-/>
+      <AdminDashboard
+        user={user}
+        token={token}
+        onLogout={handleLogout}
+      />
     );
   }
 
+  // Teacher Dashboard
   if (user?.role === "teacher") {
     return (
-      <div className="dashboard">
-        <h1>Bright Minds Academy</h1>
-        <h2>Teacher Dashboard</h2>
-        <p>Welcome, {user.username}!</p>
-        <button onClick={handleLogout}>Logout</button>
-      </div>
+      <TeacherDashboard
+        user={user}
+        token={token}
+        onLogout={handleLogout}
+      />
     );
   }
 
+  // Login Page
   return (
     <div className="login-page">
       <div className="login-container">
@@ -133,4 +136,3 @@ function App() {
 }
 
 export default App;
-

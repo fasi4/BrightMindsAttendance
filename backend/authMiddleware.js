@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
-
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
@@ -34,7 +33,18 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function requireTeacher(req, res, next) {
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({
+      message: "Teacher access required."
+    });
+  }
+
+  next();
+}
+
 module.exports = {
   authenticateToken,
-  requireAdmin
+  requireAdmin,
+  requireTeacher
 };
